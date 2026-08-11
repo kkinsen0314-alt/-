@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: 直播运营数据分析 Agent API
+  version: 1.0.0
+  description: 上传直播 CSV/Excel 数据，返回包含漏斗指标、异常判断、历史参考和优化建议的结构化分析报告。
+servers:
+  - url: https://your-live-agent.example.com
+    description: 将此地址替换为可被 Dify 访问的 HTTPS 服务地址
+paths:
+  /v1/dify/analyze:
+    post:
+      operationId: analyzeLiveDataAgent
+      summary: 分析直播运营数据
+      description: 上传 CSV/Excel 文件，由直播数据分析 Agent 进行多轮工具调用并返回结构化报告。
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 直播运营 CSV/Excel 文件，支持 csv、xls、xlsx、xlsm
+                question:
+                  type: string
+                  default: 请分析本场直播的核心问题并给出可执行建议。
+                  description: 希望 Agent 重点回答的问题
+                max_rounds:
+                  type: integer
+                  minimum: 1
+                  maximum: 8
+                  default: 4
+                  description: Agent 最多调用工具的轮数
+                history_top_k:
+                  type: integer
+                  minimum: 0
+                  maximum: 10
+                  default: 3
+                  description: 检索历史报告和业务知识的数量
+      responses:
+        '200':
+          description: 分析完成或返回结构化失败结果
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: 文件格式、字段或请求参数错误
+        '401':
+          description: 缺少 X-API-Key
+        '403':
+          description: X-API-Key 无效
+        '413':
+          description: 上传文件超过大小限制
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    Recommendation:
+      type: object
+      properties:
+        priority:
+          type: string
+          enum: [high, medium, low]
+        problem:
+          type: string
+        action:
+          type: string
+        expected_effect:
+          type: string
+    Evidence:
+      type: object
+      properties:
+        source:
+          type: string
+        metric:
+          type: string
+        value:
+          type: string
+        explanation:
+          type: string
+    AnalysisReport:
+      type: object
+      properties:
+        title:
+          type: string
+        risk_level:
+          type: string
+          enum: [normal, attention, critical, insufficient_sample, incomplete_data]
+        summary:
+          type: string
+        key_findings:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+    ToolCallRecord:
+      type: object
+      properties:
+        name:
+          type: string
+        arguments:
+          type: object
+        duration_ms:
+          type: integer
+        success:
+          type: boolean
+        error:
+          type: string
+    HistoryHit:
+      type: object
+      properties:
+        path:
+          type: string
+        title:
+          type: string
+        score:
+          type: number
+        snippet:
+          type: string
+    AnalysisResponse:
+      type: object
+      required: [run_id, status]
+      properties:
+        run_id:
+          type: string
+        status:
+          type: string
+          enum: [completed, failed]
+        report:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/AnalysisReport'
+        tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolCallRecord'
+        history_hits:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoryHit'
+        error:
+          type: string

@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "minimum_sample_size": 20,
+  "minimum_inviter_sample_size": 10,
+  "metrics": {
+    "attendance_rate": {
+      "label": "到课率",
+      "source": "到课率",
+      "unit": "percent",
+      "warning_below": 80,
+      "critical_below": 60
+    },
+    "completion_rate": {
+      "label": "完课率",
+      "source": "完课率",
+      "unit": "percent",
+      "warning_below": 25,
+      "critical_below": 10
+    },
+    "average_watch_minutes": {
+      "label": "平均观看时长",
+      "source": "平均观看时长_秒",
+      "unit": "minutes",
+      "warning_below": 25,
+      "critical_below": 15
+    },
+    "inviter_attendance_rate": {
+      "label": "单邀请人到课率",
+      "source": "到课率",
+      "unit": "percent",
+      "warning_below": 75,
+      "critical_below": 60
+    }
+  }
+}
